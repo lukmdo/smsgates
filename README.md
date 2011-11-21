@@ -10,6 +10,8 @@ Use **smsgate** script with some alias sugar:
 Then:
 
     echo "fun time!" | sms_bob
+    sms_bob "fun time!"
+    sms_bob It also works:)
 
 
 Or build your code using **smsgates**:
