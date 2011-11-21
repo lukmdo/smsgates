@@ -1,9 +1,14 @@
+from collections import namedtuple
+from twill.commands import go, formvalue, submit, agent, code, notfind, find,\
+    follow, sleep
+
 __all__ = ['AbstractSMSGate', 'VFGate']
-from twill.commands import go, formvalue, submit, agent, code, notfind, find, follow, sleep
+
 
 class _LogSilencer(object):
     def write(self, msg):
         pass
+
 
 class AbstractSMSGate(object):
     """Abstract class for SMS gate
@@ -14,23 +19,24 @@ class AbstractSMSGate(object):
         with MySMSGate() as gate:
             gate.send(some_text)
     """
-    MY_HTTP_AGENT="Mozilla/5.0"
+    MY_HTTP_AGENT = "Mozilla/5.0"
+
     def __init__(self, verbose=False, **kwargs):
         if not verbose:
             from twill import browser
             browser.OUT = _LogSilencer()
         self.setup(**kwargs)
 
-    def setup(self, **kwargs):
+    def setup(self, *args, **kwargs):
         """
         :return: object ready to fire ``send``
         """
         return self
 
-    def send(self, msg):
-        raise NotImplemented("Must be implemented by it subclass")
+    def send(self, msg, to):
+        raise NotImplementedError("Must be implemented by it subclass")
 
-    def close(self):
+    def close(self, error_info=None):
         return True
 
     def __enter__(self):
@@ -45,23 +51,29 @@ class AbstractSMSGate(object):
         :return: Boolean to indicate success default True
         """
 
-#       @todo: Should pass e and then e.type, e.value, e.traceback
-        val = self.close(type, value, traceback)
+        if type:
+            ErrorInfo = namedtuple('ErrorInfo', 'type value traceback')
+            error_info = ErrorInfo(type, value, traceback)
+            val = self.close(error_info)
+        else:
+            val = self.close()
+
         return val if val is not None else True
+
 
 class VFGate(AbstractSMSGate):
     """tested with vodafone.ie"""
-    
+
     def setup(self,
               login=None,
               password=None,
-              SERVICE_URL="/myv/messaging/webtext/index.jsp",
-              LOGIN_URL="https://www.vodafone.ie/myv/services/login/index.jsp",
-              LOGOUT_URL="/myv/services/logout/Logout.shtml"):
+              service_url="/myv/messaging/webtext/index.jsp",
+              login_url="https://www.vodafone.ie/myv/services/login/index.jsp",
+              logout_url="/myv/services/logout/Logout.shtml"):
 
-        self.SERVICE_URL = SERVICE_URL
-        self.LOGIN_URL = LOGIN_URL
-        self.LOGOUT_URL = LOGOUT_URL
+        self.SERVICE_URL = service_url
+        self.LOGIN_URL = login_url
+        self.LOGOUT_URL = logout_url
         self.MY_PHONE_NUMBER = login
         self.MY_PASSWORD = password
 
@@ -88,7 +100,7 @@ class VFGate(AbstractSMSGate):
         code(200)
         find("Message sent!")
 
-    def close(self, *e_info):
+    def close(self, error_info=None):
         follow(self.LOGOUT_URL)
         code(200)
         find("Sign in to")

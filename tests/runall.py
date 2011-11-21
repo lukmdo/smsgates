@@ -15,7 +15,8 @@ import unittest2 as unittest
 
 class TestVFGate(unittest.TestCase):
     def test_send_with_device(self):
-        with VFGate(login=os.environ['TEST_SMS_GATES_LOGIN'], password=os.environ['TEST_SMS_GATES_PASSWORD']) as gate:
+        with VFGate(login=os.environ['TEST_SMS_GATES_LOGIN'],
+                    password=os.environ['TEST_SMS_GATES_PASSWORD']) as gate:
             gate.send("It worked!", os.environ['TEST_SMS_GATES_PHONE_NR'])
 
 if __name__ == '__main__':
