@@ -1,12 +1,12 @@
 First:
 
     pip install -r requirements.txt
-Then use smsgates/smsgate script:
+    python setup.py install
+    
+Use **smsgate** script with some alias sugar:
 
-    python smsgates/smsgate -l LOGIN -p PASSWORD MESSAGE_OR_STDIN
-Add alias sugar:
+    export sms_bob="smsgate -l LOGIN -p PASSWORD -n BOB_PHONE_NUMBER $*"
 
-    export sms_bob="python smsgates/smsgate -l LOGIN -p PASSWORD -n BOB_PHONE_NUMBER MESSAGE_OR_STDIN"
 Then:
 
     echo "fun time!" | sms_bob
