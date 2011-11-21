@@ -5,7 +5,7 @@ First:
     
 Use **smsgate** script with some alias sugar:
 
-    alias sms_bob="smsgate -l LOGIN -p PASSWORD -n BOB_PHONE_NUMBER $*"
+    alias sms_bob='smsgate -l LOGIN -p PASSWORD -n BOB_PHONE_NUMBER $*'
 
 Then:
 
