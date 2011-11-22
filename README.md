@@ -23,7 +23,8 @@ Or build your code using **smsgates**:
 
 
 List of supported gates:
-- vodavone.ie
+- vodafone.ie
+- orange.pl
 - ...yours?!
 
 

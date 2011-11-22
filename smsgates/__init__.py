@@ -1,8 +1,15 @@
 from collections import namedtuple
-from twill.commands import go, formvalue, submit, agent, code, notfind, find,\
-    follow, sleep
+import twill.commands as web
 
-__all__ = ['AbstractSMSGate', 'VFGate']
+__all__ = ['get_gate_class', 'Abstract_SMS_Gate',
+           'Vodafone_Gate', 'Orange_Gate']
+
+
+def get_gate_class(name):
+    gate_imp_class = {
+        'vodafone.ie':  Vodafone_Gate,
+        'orange.pl':  Orange_Gate}
+    return gate_imp_class[name.lower()]
 
 
 class _LogSilencer(object):
@@ -10,7 +17,7 @@ class _LogSilencer(object):
         pass
 
 
-class AbstractSMSGate(object):
+class Abstract_SMS_Gate(object):
     """Abstract class for SMS gate
 
     Implements those public template methods that drive its behaviour.
@@ -61,7 +68,46 @@ class AbstractSMSGate(object):
         return val if val is not None else True
 
 
-class VFGate(AbstractSMSGate):
+class Orange_Gate(Abstract_SMS_Gate):
+    """tested with orange.pl"""
+
+    def setup(self,
+              login=None,
+              password=None,
+              service_url="/portal/map/map/message_box",
+              login_url="http://www.orange.pl/zaloguj.phtml"):
+
+        self.SERVICE_URL = service_url
+        self.LOGIN_URL = login_url
+        self.MY_PHONE_NUMBER = login
+        self.MY_PASSWORD = password
+
+        web.agent(self.MY_HTTP_AGENT)
+        web.go(self.LOGIN_URL)
+        web.code(200)
+        web.formvalue("loginForm", "login", self.MY_PHONE_NUMBER)
+        web.formvalue("loginForm", "password", self.MY_PASSWORD)
+        web.submit()
+        web.code(200)
+        web.find(self.SERVICE_URL)
+
+    def send(self, msg, to):
+        web.follow(self.SERVICE_URL)
+        web.follow("newsms")
+        web.formvalue("sendSMS", "smsBody", msg)
+        web.formvalue("sendSMS", "smsTo", to)
+        web.submit()
+        web.code(200)
+        web.find("newsms")
+
+    def close(self, error_info=None):
+        web.formvalue("logoutForm", "_dyncharset", None)
+        web.submit()
+        web.code(200)
+        web.find("zaloguj")
+
+
+class Vodafone_Gate(Abstract_SMS_Gate):
     """tested with vodafone.ie"""
 
     def setup(self,
@@ -77,30 +123,30 @@ class VFGate(AbstractSMSGate):
         self.MY_PHONE_NUMBER = login
         self.MY_PASSWORD = password
 
-        agent(self.MY_HTTP_AGENT)
-        go(self.LOGIN_URL)
-        code(200)
-        formvalue("Login", "username", self.MY_PHONE_NUMBER)
-        formvalue("Login", "password", self.MY_PASSWORD)
-        submit()
-        code(200)
-        notfind("check your details")
-        find(self.SERVICE_URL)
+        web.agent(self.MY_HTTP_AGENT)
+        web.go(self.LOGIN_URL)
+        web.code(200)
+        web.formvalue("Login", "username", self.MY_PHONE_NUMBER)
+        web.formvalue("Login", "password", self.MY_PASSWORD)
+        web.submit()
+        web.code(200)
+        web.notfind("check your details")
+        web.find(self.SERVICE_URL)
 
     def send(self, msg, to):
         """
         @todo: add support for chunking the message
         @todo: add support for multiple recipients
         """
-        follow(self.SERVICE_URL)
-        formvalue("WebText", "message", msg)
-        formvalue("WebText", "recipient_0", to)
-        sleep(2)
-        submit()
-        code(200)
-        find("Message sent!")
+        web.follow(self.SERVICE_URL)
+        web.formvalue("WebText", "message", msg)
+        web.formvalue("WebText", "recipient_0", to)
+        web.sleep(0.5)
+        web.submit()
+        web.code(200)
+        web.find("Message sent!")
 
     def close(self, error_info=None):
-        follow(self.LOGOUT_URL)
-        code(200)
-        find("Sign in to")
+        web.follow(self.LOGOUT_URL)
+        web.code(200)
+        web.find("Sign in to")
