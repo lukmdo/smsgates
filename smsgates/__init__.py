@@ -141,7 +141,7 @@ class Vodafone_Gate(Abstract_SMS_Gate):
         web.follow(self.SERVICE_URL)
         web.formvalue("WebText", "message", msg)
         web.formvalue("WebText", "recipient_0", to)
-        web.sleep(0.5)
+        web.sleep(2)
         web.submit()
         web.code(200)
         web.find("Message sent!")
