@@ -23,8 +23,16 @@ Or build your code using **smsgates**:
 
 
 List of supported gates:
+========================
 - vodafone.ie
 - orange.pl
 - ...yours?!
 
+Ideas:
+======
+- reading from vCard (Mac Address Book, Google Contacts) 
+- bash completion
+- listing gates
+- listing contacts
+- storing some metadata (when/what send to who) ? configurable default off
 
