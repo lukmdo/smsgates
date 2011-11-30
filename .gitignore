@@ -1,5 +1,10 @@
+*.egg-info
 *.pyc
 *.swp
 *~
 .DS_Store
 .twill-history
+.coverage
+build
+dist
+

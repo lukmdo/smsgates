@@ -1,10 +1,16 @@
-from distutils.core import setup
+from setuptools import setup
+import smsgates
+
 
 setup(
-    name = 'smsgates',
-    version = '0.0.1',
-    author = 'ssspiochld',
-    description = 'Send your SMS the way U like',
-    packages = ['smsgates'],
-    scripts = ['smsgates/smsgate.py'],
+    name='smsgates',
+    version=smsgates.__version__,
+    author='ssspiochld',
+    author_email='lukasz.m.dobrzanski@gmail.com',
+    description=smsgates.__about__,
+    long_description=smsgates.__doc__,
+    packages=['smsgates', 'tests'],
+    scripts=['smsgates/sendsms.py'],
+    test_suite='tests.runall.suite',
+    zip_safe=False
 )

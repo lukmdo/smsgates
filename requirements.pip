@@ -1,0 +1,5 @@
+twill
+# need to use python-dateutil <2.x for python2.x
+python-dateutil==1.5
+vobject
+unittest2

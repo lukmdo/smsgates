@@ -1,23 +1,86 @@
 from collections import namedtuple
-import twill.commands as web
 
-__all__ = ['get_gate_class', 'Abstract_SMS_Gate',
-           'Vodafone_Gate', 'Orange_Gate']
+__version__ = '0.0.1b'
+__about__ = 'Send your SMS the way U like'
+__all__ = ['BaseFactory', 'Contact', 'ContactBook', 'AbstractSMSGate']
 
 
-def get_gate_class(name):
-    gate_imp_class = {
-        'vodafone.ie':  Vodafone_Gate,
-        'orange.pl':  Orange_Gate}
-    return gate_imp_class[name.lower()]
+class BaseFactory(object):
+    """@todo: document the _choices @property (can return list/dict)"""
+    _choices = dict()
+
+    @classmethod
+    def get_class(cls, name=None):
+        return cls()._choices[name]
+
+    def __iter__(self):
+        return iter(self._choices)
 
 
 class _LogSilencer(object):
-    def write(self, msg):
+    def write(self, *args):
         pass
 
 
-class Abstract_SMS_Gate(object):
+class Contact(object):
+    alias = None
+    mobile = None
+
+    def __init__(self, alias=None, mobile=None, **kwargs):
+        """telephones=None, name=None, group=None"""
+        self.fullname = kwargs.get('name', '')
+        self.alias = alias if alias else self.fullname
+        self.mobile = mobile if mobile else kwargs.get('telephones').get(
+            'mobile')
+
+#        for prop in ('telephones', 'group'):
+#            if prop in kwargs:
+#                setattr(self, prop, kwargs[prop])
+
+    def __hash__(self):
+        return hash(tuple(vars(self).items()))
+
+    def __eq__(self, other):
+        return vars(self) == vars(other)
+
+    def __repr__(self):
+        return "Contact:: %s" % vars(self)
+
+    def __str__(self):
+#        csv_str = StringIO.StringIO()
+#        writer = csv.writer(csv_str, delimiter=',', quoting=csv.QUOTE_MINIMAL)
+#        writer.writerow([getattr(self, k).strip() for k in sorted(vars(self).
+#            keys())])
+#        return csv_str.getvalue().strip()
+        return ",".join([getattr(self, k) for k in sorted(vars(self).keys())])
+
+
+class ContactBook(set):
+    def __init__(self, contacts=None, from_file=None, factory=None):
+        if from_file:
+            with from_file as f:
+                parser = factory.get_class(from_file.name)
+                contacts = parser(f.read())
+        self._filters = {
+            'exact': lambda c, k, v: getattr(c, k, '') == v,
+            'iexact': lambda c, k, v: getattr(c, k, '').lower() == v.lower(),
+            'like': lambda c, k, v: v in getattr(c, k, ''),
+            'ilike': lambda c, k, v: v.lower() in getattr(c, k, '').lower(),
+            'startswith': lambda c, k, v: getattr(c, k, '').startswith(v),
+            'istartswith': lambda c, k, v: getattr(c, k, '').lower().
+                startswith(v.lower()),
+        }
+        super(ContactBook, self).__init__(contacts)
+
+    def search(self, **kwargs):
+        k, v = kwargs.items()[0]
+        k, fname = k.split('__') if "__" in k else (k, 'exact')
+        finder = self._filters[fname]
+        params_finder = lambda c: finder(c, k, v)
+        return set(filter(params_finder, self))
+
+
+class AbstractSMSGate(object):
     """Abstract class for SMS gate
 
     Implements those public template methods that drive its behaviour.
@@ -40,11 +103,15 @@ class Abstract_SMS_Gate(object):
         """
         return self
 
-    def send(self, msg, to):
+    def send(self, msg, *send_to):
+        """
+        @todo: add support for chunking the message
+        @todo: add support for templating
+        """
         raise NotImplementedError("Must be implemented by it subclass")
 
     def close(self, error_info=None):
-        return True
+        return False if error_info else True
 
     def __enter__(self):
         return self
@@ -57,96 +124,11 @@ class Abstract_SMS_Gate(object):
 
         :return: Boolean to indicate success default True
         """
-
         if type:
-            ErrorInfo = namedtuple('ErrorInfo', 'type value traceback')
+            ErrorInfo = namedtuple('ErrorInfo', ['type', 'value', 'traceback'])
             error_info = ErrorInfo(type, value, traceback)
             val = self.close(error_info)
         else:
             val = self.close()
 
         return val if val is not None else True
-
-
-class Orange_Gate(Abstract_SMS_Gate):
-    """tested with orange.pl"""
-
-    def setup(self,
-              login=None,
-              password=None,
-              service_url="/portal/map/map/message_box",
-              login_url="http://www.orange.pl/zaloguj.phtml"):
-
-        self.SERVICE_URL = service_url
-        self.LOGIN_URL = login_url
-        self.MY_PHONE_NUMBER = login
-        self.MY_PASSWORD = password
-
-        web.agent(self.MY_HTTP_AGENT)
-        web.go(self.LOGIN_URL)
-        web.code(200)
-        web.formvalue("loginForm", "login", self.MY_PHONE_NUMBER)
-        web.formvalue("loginForm", "password", self.MY_PASSWORD)
-        web.submit()
-        web.code(200)
-        web.find(self.SERVICE_URL)
-
-    def send(self, msg, to):
-        web.follow(self.SERVICE_URL)
-        web.follow("newsms")
-        web.formvalue("sendSMS", "smsBody", msg)
-        web.formvalue("sendSMS", "smsTo", to)
-        web.submit()
-        web.code(200)
-        web.find("newsms")
-
-    def close(self, error_info=None):
-        web.formvalue("logoutForm", "_dyncharset", None)
-        web.submit()
-        web.code(200)
-        web.find("zaloguj")
-
-
-class Vodafone_Gate(Abstract_SMS_Gate):
-    """tested with vodafone.ie"""
-
-    def setup(self,
-              login=None,
-              password=None,
-              service_url="/myv/messaging/webtext/index.jsp",
-              login_url="https://www.vodafone.ie/myv/services/login/index.jsp",
-              logout_url="/myv/services/logout/Logout.shtml"):
-
-        self.SERVICE_URL = service_url
-        self.LOGIN_URL = login_url
-        self.LOGOUT_URL = logout_url
-        self.MY_PHONE_NUMBER = login
-        self.MY_PASSWORD = password
-
-        web.agent(self.MY_HTTP_AGENT)
-        web.go(self.LOGIN_URL)
-        web.code(200)
-        web.formvalue("Login", "username", self.MY_PHONE_NUMBER)
-        web.formvalue("Login", "password", self.MY_PASSWORD)
-        web.submit()
-        web.code(200)
-        web.notfind("check your details")
-        web.find(self.SERVICE_URL)
-
-    def send(self, msg, to):
-        """
-        @todo: add support for chunking the message
-        @todo: add support for multiple recipients
-        """
-        web.follow(self.SERVICE_URL)
-        web.formvalue("WebText", "message", msg)
-        web.formvalue("WebText", "recipient_0", to)
-        web.sleep(2)
-        web.submit()
-        web.code(200)
-        web.find("Message sent!")
-
-    def close(self, error_info=None):
-        web.follow(self.LOGOUT_URL)
-        web.code(200)
-        web.find("Sign in to")
