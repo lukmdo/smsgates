@@ -1,3 +1,5 @@
+# smsgates project smsgates [![status](http://stillmaintained.com/ssspiochld/smsgates.png)](http://stillmaintained.com/ssspiochld/smsgates)
+
 First:
 
     pip install -r requirements.txt
@@ -26,8 +28,8 @@ Or build your code using **smsgates**:
     with MySMSGate(login=l, password=p) as gate:
         gate.send(some_text)
 
-Ideas:
-======
+## Ideas:
+
 * reading from vCard (Mac Address Book, Google Contacts) 
 * bash completion
 * listing gates
