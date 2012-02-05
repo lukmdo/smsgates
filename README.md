@@ -57,4 +57,4 @@ with MySMSGate(login=l, password=p) as gate:
 - speedup vCard contacts parsing ?
 - listing gates
 - storing some metadata (when/what send to who) ? configurable default off
-- adding contact groups
+- support contact groups

@@ -1,5 +1,6 @@
 import unittest2 as unittest
 
+# @todo: add tests for smsgates package base classes
 
 def suite():
     """

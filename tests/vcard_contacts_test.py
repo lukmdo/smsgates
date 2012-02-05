@@ -51,8 +51,5 @@ class VCardTest(unittest.TestCase):
         self.contact.new_prop = "VALUE"
         self.assertNotEqual(self.contact, contact)
 
-#    def test_one_fail(self):
-#        self.assertTrue(False)
-
 if __name__ == '__main__':
     unittest.main()

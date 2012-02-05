@@ -1,3 +1,11 @@
+"""smsgates open more options to send your SMS the way U like
+
+- smsgates.contrib provides the different smsgates support
+- smsgates.extras all candies like vCard contacts parsing
+- sendsms script full functional day-to-day use or good starting point
+
+Base classes used later in smsgates.contrib and smsgates.extras.
+"""
 from collections import namedtuple
 
 __version__ = '0.0.1b'
@@ -23,19 +31,26 @@ class _LogSilencer(object):
 
 
 class Contact(object):
+    """Contact class represents single user metadata
+
+    :param alias - if not available ot will be same as fullname
+    :param mobile optional - but contacts without it are ignored
+    :param fullname - name + surname
+
+    @todo: consider adding  support for:
+
+        - groups,
+        - multiple telephones
+        - firstname, surname
+    """
     alias = None
     mobile = None
 
     def __init__(self, alias=None, mobile=None, **kwargs):
-        """telephones=None, name=None, group=None"""
         self.fullname = kwargs.get('name', '')
         self.alias = alias if alias else self.fullname
         self.mobile = mobile if mobile else kwargs.get('telephones').get(
             'mobile')
-
-#        for prop in ('telephones', 'group'):
-#            if prop in kwargs:
-#                setattr(self, prop, kwargs[prop])
 
     def __hash__(self):
         return hash(tuple(vars(self).items()))
@@ -47,11 +62,16 @@ class Contact(object):
         return "Contact:: %s" % vars(self)
 
     def __str__(self):
-#        csv_str = StringIO.StringIO()
-#        writer = csv.writer(csv_str, delimiter=',', quoting=csv.QUOTE_MINIMAL)
-#        writer.writerow([getattr(self, k).strip() for k in sorted(vars(self).
-#            keys())])
-#        return csv_str.getvalue().strip()
+        """
+        :return: simple serialized contact data
+        @todo: using csv by default: ?
+
+            csv_str = StringIO.StringIO()
+            writer = csv.writer(csv_str, delimiter=',', quoting=csv.QUOTE_MINIMAL)
+            writer.writerow([getattr(self, k).strip() for k in sorted(vars(self).
+                keys())])
+            return csv_str.getvalue().strip()
+        """
         return ",".join([getattr(self, k) for k in sorted(vars(self).keys())])
 
 
@@ -73,6 +93,22 @@ class ContactBook(set):
         super(ContactBook, self).__init__(contacts)
 
     def search(self, **kwargs):
+        """
+
+        :param kwargs: single key-value filter ``PROP__FILTER=VALUE`` where:
+
+            - *PROP* is the property to base the filter
+            - *FILTER* is ONE from:
+            -- exact
+            -- iexact
+            -- like
+            -- ilike
+            -- startswith
+            -- istartswith
+            - *VALUE* to filter on
+        :return: set of contacts satisfying the filter criteria
+        """
+
         k, v = kwargs.items()[0]
         k, fname = k.split('__') if "__" in k else (k, 'exact')
         finder = self._filters[fname]
@@ -88,6 +124,8 @@ class AbstractSMSGate(object):
 
         with MySMSGate() as gate:
             gate.send(some_text)
+
+    @todo: add tests
     """
     MY_HTTP_AGENT = "Mozilla/5.0"
 
@@ -117,12 +155,11 @@ class AbstractSMSGate(object):
         return self
 
     def __exit__(self, type, value, traceback):
-        """
-        This method is supposed to:
+        """This method is supposed to:
+
         - handle the exceptions risen authentication or ``send``
         - make any finalization/logout
-
-        :return: Boolean to indicate success default True
+        :return: Boolean to indicate implementing exception handling
         """
         if type:
             ErrorInfo = namedtuple('ErrorInfo', ['type', 'value', 'traceback'])
@@ -131,4 +168,5 @@ class AbstractSMSGate(object):
         else:
             val = self.close()
 
-        return val if val is not None else True
+        return val
+

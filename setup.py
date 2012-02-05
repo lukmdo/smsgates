@@ -5,6 +5,7 @@ import smsgates
 setup(
     name='smsgates',
     version=smsgates.__version__,
+    license = 'GNU Lesser General Public License',
     author='ssspiochld',
     author_email='lukasz.m.dobrzanski@gmail.com',
     description=smsgates.__about__,

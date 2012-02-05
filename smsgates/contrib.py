@@ -1,3 +1,15 @@
+"""
+Implements ``SMSGates`` using a simple and common framework
+
+All SmsGates should implement three methods:
+
+- setup
+- send
+- close
+
+@todo: Consider adding generic class SMSGate that would encapsulate GateFactory
+"""
+
 from smsgates import BaseFactory
 from smsgates import AbstractSMSGate
 import twill.commands as web
@@ -53,10 +65,6 @@ class OrangeGate(AbstractSMSGate):
         web.submit()
         web.code(200)
         web.find("zaloguj")
-        return False
-
-    def __str__(self):
-        return "orange.pl"
 
 
 class VodafoneGate(AbstractSMSGate):
@@ -86,6 +94,9 @@ class VodafoneGate(AbstractSMSGate):
         web.find(self.SERVICE_URL)
 
     def send(self, msg, *send_to):
+        """
+        @todo: make use of native vodafone multi-recipients functionality
+        """
         for contact in send_to:
             web.follow(self.SERVICE_URL)
             web.formvalue("WebText", "message", msg)
@@ -100,4 +111,3 @@ class VodafoneGate(AbstractSMSGate):
         web.follow(self.LOGOUT_URL)
         web.code(200)
         web.find("Sign in to")
-        return False
