@@ -14,23 +14,13 @@ For most flexibility export your contacts (from [Google Contacts](https://www.go
 in _vCard_ to ```$HOMEDIR/Documents/contacts.vcf```). Then add that to your ```.bashrc```:
 
 ```bash
-alias sms='sendsms.py -g GATE -l LOGIN -p PASSWORD -t $*'
-```
-
-Where **GATE** can be on of _vodafone.ie_, _orange.pl_, ...yours?!
-
-```bash
-function _sendsms_complete {
-    local IFS=$'\n'
-    local cur="${COMP_WORDS[COMP_CWORD]}"
-    if [ -z "$cur" ]; then
-        COMPREPLY=( $(sendsms.py -s|awk -F, '{print $1; print $2}'|sort -u|sed -e 's/ /\\ /') )
-    else
-        local cur=`echo -n $cur|tr -d "\"`
-        COMPREPLY=( $(sendsms.py -s|awk -F, '{print $1; print $2}'|sort -u|grep -i ${cur}|sed -e 's/ /\\ /') )
-    fi
-}
-complete -o default -F _sendsms_complete sms
+SMSGATES_BOOTSTRAP=`which smsgates_bootstrap.sh`
+if [ "$?" -eq "0" ]; then
+  export SMSGATES_SENDSMS_GATE="GATENAME"
+  export SMSGATES_SENDSMS_LOGIN="LOGIN"
+  export SMSGATES_SENDSMS_PASSWORD="PASSWORD"
+  source "$SMSGATES_BOOTSTRAP"
+fi
 ```
 
 Send __bob__ sms with name TAB completion:
