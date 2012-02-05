@@ -53,6 +53,7 @@ class OrangeGate(AbstractSMSGate):
         web.submit()
         web.code(200)
         web.find("zaloguj")
+        return False
 
     def __str__(self):
         return "orange.pl"
@@ -99,4 +100,4 @@ class VodafoneGate(AbstractSMSGate):
         web.follow(self.LOGOUT_URL)
         web.code(200)
         web.find("Sign in to")
-        return False if error_info else True
+        return False
