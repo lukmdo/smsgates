@@ -8,20 +8,16 @@ python setup.py install
 python setup.py test
 ```
 
-## Then make most of **sendsms** script:
+## Then make most from **sendsms** script:
 
-For most flexibility export your :book: contacts (from Google Contacts or Adress Book
-in **vCard** to ```$HOMEDIR/Documents/contacts.vcf```). Then add that to your ```.bashrc``` or ```.bash_profile```:
+For most flexibility export your contacts (from [Google Contacts](https://www.google.com/contacts) or [Apple Adress Book](http://support.apple.com/kb/HT2486)
+in _vCard_ to ```$HOMEDIR/Documents/contacts.vcf```). Then add that to your ```.bashrc```:
 
 ```bash
 alias sms='sendsms.py -g GATE -l LOGIN -p PASSWORD -t $*'
 ```
 
-Where **GATE** can be on of:
-
-* vodafone.ie
-* orange.pl
-* ...yours?!
+Where **GATE** can be on of _vodafone.ie_, _orange.pl_, ...yours?!
 
 ```bash
 function _sendsms_complete {
@@ -30,7 +26,7 @@ function _sendsms_complete {
     if [ -z "$cur" ]; then
         COMPREPLY=( $(sendsms.py -s|awk -F, '{print $1; print $2}'|sort -u|sed -e 's/ /\\ /') )
     else
-        local cur=`echo -n $cur|tr -d '\'`
+        local cur=`echo -n $cur|tr -d "\"`
         COMPREPLY=( $(sendsms.py -s|awk -F, '{print $1; print $2}'|sort -u|grep -i ${cur}|sed -e 's/ /\\ /') )
     fi
 }
@@ -58,7 +54,7 @@ with MySMSGate(login=l, password=p) as gate:
 
 ### Ideas:
 
-* speedup vCard contacts parsing ?
-* listing gates
-* storing some metadata (when/what send to who) ? configurable default off
-* adding contact groups
+- speedup vCard contacts parsing ?
+- listing gates
+- storing some metadata (when/what send to who) ? configurable default off
+- adding contact groups
