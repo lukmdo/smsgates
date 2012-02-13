@@ -48,3 +48,4 @@ with MySMSGate(login=l, password=p) as gate:
 - listing gates
 - storing some metadata (when/what send to who) ? configurable default off
 - support contact groups
+- automate grabbing google contacts ?
