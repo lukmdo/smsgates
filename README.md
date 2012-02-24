@@ -49,3 +49,4 @@ with MySMSGate(login=l, password=p) as gate:
 - storing some metadata (when/what send to who) ? configurable default off
 - support contact groups
 - automate grabbing google contacts ?
+- [twilio support](http://www.twilio.com/)
