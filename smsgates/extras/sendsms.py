@@ -52,18 +52,27 @@ def main():
         map(print, sorted(contacts, key=lambda c: c.alias))
         return
 
+    for arg_name in ['login', 'password', 'gate_name']:
+        if not getattr(args, arg_name):
+            parser.error("argument %s is required to send message" % arg_name)
+
     from smsgates.contrib import GateFactory
     GateClass = GateFactory.get_class(args.gate_name)
     with GateClass(verbose=args.verbose, login=args.login,
                    password=args.password) as gate:
-        to = args.to_contact if args.to_contact else extra_args.pop(0)
         if args.message:
             msg = " ".join(args.message)
         else:
             msg = " ".join(extra_args) or sys.stdin.read()
-        contacts = set.union(
-            contacts_book.search(alias__ilike=to),
-            contacts_book.search(fullname__ilike=to))
+
+        if args.to_number:
+            contacts = [args.to_number]
+        else:
+            to = args.to_contact if args.to_contact else extra_args.pop(0)
+            contacts = set.union(
+                contacts_book.search(alias__ilike=to),
+                contacts_book.search(fullname__ilike=to))
+
         gate.send(msg, *contacts)
 
 

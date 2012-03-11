@@ -3,3 +3,4 @@ twill
 python-dateutil==1.5
 vobject
 unittest2
+argparse

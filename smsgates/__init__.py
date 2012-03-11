@@ -8,7 +8,7 @@ Base classes used later in smsgates.contrib and smsgates.extras.
 """
 from collections import namedtuple
 
-__version__ = '0.0.1b'
+__version__ = '0.0.2'
 __about__ = 'Send your SMS the way U like'
 __all__ = ['BaseFactory', 'Contact', 'ContactBook', 'AbstractSMSGate']
 
