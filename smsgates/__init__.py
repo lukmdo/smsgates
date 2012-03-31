@@ -72,7 +72,8 @@ class Contact(object):
                 keys())])
             return csv_str.getvalue().strip()
         """
-        return ",".join([getattr(self, k) for k in sorted(vars(self).keys())])
+        out = ",".join([getattr(self, k) for k in sorted(vars(self).keys())])
+        return out.encode('utf-8')
 
 
 class ContactBook(set):
