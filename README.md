@@ -1,4 +1,4 @@
-# smsgates project [![status](http://stillmaintained.com/ssspiochld/smsgates.png)](http://stillmaintained.com/ssspiochld/smsgates)
+# smsgates project 
 
 ## First:
 
