@@ -44,9 +44,12 @@ def main():
                                 factory=ContactParserFactory)
     if args.show_contacts:
         if args.show_contacts != True:
+            # assume utf8 input otherwise: 
+            # ```UnicodeDecodeError: 'ascii' codec can't decode...```
+            to = unicode(args.show_contacts, 'utf8')  
             contacts = set.union(
-                contacts_book.search(alias__ilike=args.show_contacts),
-                contacts_book.search(fullname__ilike=args.show_contacts))
+                contacts_book.search(alias__ilike=to),
+                contacts_book.search(fullname__ilike=to))
         else:
             contacts = list(contacts_book)
         map(print, sorted(contacts, key=lambda c: c.alias))
@@ -69,6 +72,9 @@ def main():
             contacts = [args.to_number]
         else:
             to = args.to_contact if args.to_contact else extra_args.pop(0)
+            # assume utf8 input otherwise: 
+            # ```UnicodeDecodeError: 'ascii' codec can't decode...```
+            to = unicode(to, 'utf8')  
             contacts = set.union(
                 contacts_book.search(alias__ilike=to),
                 contacts_book.search(fullname__ilike=to))
