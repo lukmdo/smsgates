@@ -20,7 +20,8 @@ class GateFactory(BaseFactory):
     def _choices(self):
         return {
             'vodafone.ie': VodafoneGate,
-            'orange.pl': OrangeGate}
+            'orange.pl': OrangeGate,
+            'twilio.com': TwilioGate}
 
     @classmethod
     def get_class(cls, name=None):
@@ -112,3 +113,23 @@ class VodafoneGate(AbstractSMSGate):
         web.follow(self.LOGOUT_URL)
         web.code(200)
         web.find("Sign in to")
+
+
+class TwilioGate(AbstractSMSGate):
+    """Twilio messaging from cloud http://www.twilio.com"""
+
+    def setup(self, sender=None, login=None, password=None):
+        from twilio.rest import TwilioRestClient
+
+        self.SENDER = sender
+        self.ACCOUNT = login
+        self.TOKEN = password
+        self.client = TwilioRestClient(self.ACCOUNT, self.TOKEN)
+
+    def send(self, msg, *send_to):
+        for contact in send_to:
+            to = getattr(contact, 'mobile', contact)
+            self.client.sms.messages.create(to=to, from_=self.SENDER, body=msg)
+
+    def close(self, error_info=None):
+        pass

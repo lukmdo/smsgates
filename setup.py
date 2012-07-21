@@ -5,10 +5,10 @@ import smsgates
 setup(
     name='smsgates',
     version=smsgates.__version__,
-    license = 'GNU Lesser General Public License',
+    license='GNU Lesser General Public License',
     url='https://github.com/ssspiochld/smsgates',
-    author='ssspiochld',
-    author_email='lukasz.m.dobrzanski@gmail.com',
+    author='lukmdo',
+    author_email='me@lukmdo.com',
     description=smsgates.__about__,
     long_description=smsgates.__doc__,
     packages=['smsgates', 'smsgates.extras', 'tests'],

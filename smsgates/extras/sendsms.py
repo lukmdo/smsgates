@@ -26,6 +26,7 @@ def main():
     parser.add_argument("-l", "--login", help="username for the SMS gate")
     parser.add_argument("-p", "--password", help="password")
     parser.add_argument("-m", "--message", nargs='*', help="message to send")
+    parser.add_argument("-S", "--sender", help="only for some gates")  # twilio
     parser.add_argument("-t", "--to_contact",
                         help="recipient alias from the contacts_file")
     parser.add_argument("-n", "--to_number", help="recipient phone number")
@@ -44,9 +45,9 @@ def main():
                                 factory=ContactParserFactory)
     if args.show_contacts:
         if args.show_contacts != True:
-            # assume utf8 input otherwise: 
+            # assume utf8 input otherwise:
             # ```UnicodeDecodeError: 'ascii' codec can't decode...```
-            to = unicode(args.show_contacts, 'utf8')  
+            to = unicode(args.show_contacts, 'utf8')
             contacts = set.union(
                 contacts_book.search(alias__ilike=to),
                 contacts_book.search(fullname__ilike=to))
@@ -60,9 +61,15 @@ def main():
             parser.error("argument %s is required to send message" % arg_name)
 
     from smsgates.contrib import GateFactory
+    from smsgates.contrib import TwilioGate
     GateClass = GateFactory.get_class(args.gate_name)
-    with GateClass(verbose=args.verbose, login=args.login,
-                   password=args.password) as gate:
+    gate_kwargs = dict(verbose=args.verbose,
+                       login=args.login,
+                       password=args.password)
+    if GateClass is TwilioGate:
+        gate_kwargs['sender'] = args.sender
+
+    with GateClass(**gate_kwargs) as gate:
         if args.message:
             msg = " ".join(args.message)
         else:
@@ -72,9 +79,9 @@ def main():
             contacts = [args.to_number]
         else:
             to = args.to_contact if args.to_contact else extra_args.pop(0)
-            # assume utf8 input otherwise: 
+            # assume utf8 input otherwise:
             # ```UnicodeDecodeError: 'ascii' codec can't decode...```
-            to = unicode(to, 'utf8')  
+            to = unicode(to, 'utf8')
             contacts = set.union(
                 contacts_book.search(alias__ilike=to),
                 contacts_book.search(fullname__ilike=to))

@@ -42,6 +42,21 @@ with MySMSGate(login=l, password=p) as gate:
     gate.send(some_text, number)
 ```
 
+## Your mobile provider has poor/None sms gate ...maybe [twilio.com](http://www.twilio.com) is for you
+
+[Twilio](https://www.twilio.com) looks as nice option [if you don't mind paying few $](https://www.twilio.com/sms/pricing).
+Just [create an account](https://www.twilio.com/login) and kick:
+
+```
+pip install -r provider_requirements/twilio_requirements.pip
+```
+
+An then pass:
+- ```--gate_name``` as __twilio.com__
+- ```--sender``` as your number
+- ```--login``` as your account sid
+- ```--password``` as your account token
+
 ### Ideas:
 
 - speedup vCard contacts parsing ?
@@ -49,4 +64,3 @@ with MySMSGate(login=l, password=p) as gate:
 - storing some metadata (when/what send to who) ? configurable default off
 - support contact groups
 - automate grabbing google contacts ?
-- [twilio support](http://www.twilio.com/)
