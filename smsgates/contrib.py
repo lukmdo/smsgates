@@ -75,7 +75,7 @@ class VodafoneGate(AbstractSMSGate):
     def setup(self,
               login=None,
               password=None,
-              service_url="/myv/messaging/webtext/index.jsp",
+              service_url="/myv/messaging/webtext/",
               login_url="https://www.vodafone.ie/myv/services/login/index.jsp",
               logout_url="/myv/services/logout/Logout.shtml"):
 
