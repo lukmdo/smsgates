@@ -10,9 +10,12 @@ All SmsGates should implement three methods:
 @todo: Consider adding generic class SMSGate that would encapsulate GateFactory
 """
 
+import os
+import tempfile
+import twill.errors
+import twill.commands as web
 from smsgates import BaseFactory
 from smsgates import AbstractSMSGate
-import twill.commands as web
 
 
 class GateFactory(BaseFactory):
@@ -64,6 +67,7 @@ class OrangeGate(AbstractSMSGate):
 
     def close(self, error_info=None):
         web.formvalue("logoutForm", "_dyncharset", None)
+        web.save_html()
         web.submit()
         web.code(200)
         web.find("zaloguj")
@@ -101,9 +105,24 @@ class VodafoneGate(AbstractSMSGate):
         """
         for contact in send_to:
             web.follow(self.SERVICE_URL)
+
+            try:
+                web.find('/myv/messaging/webtext/Challenge.shtml')
+            except twill.errors.TwillAssertionError, e:
+                pass
+            else:
+                web.go('/myv/messaging/webtext/Challenge.shtml')
+                with tempfile.NamedTemporaryFile(suffix=".jpeg") as captcha:
+                    web.save_html(captcha.name)
+                    web.back()
+                    os.system("open %s " % captcha.name)
+                    web.formvalue("WebText", "jcaptcha_response",
+                                  raw_input("Captcha: "))
+
             web.formvalue("WebText", "message", msg)
             to = getattr(contact, 'mobile', contact)
             web.formvalue("WebText", "recipient_0", to)
+
             web.sleep(2)
             web.submit()
             web.code(200)
