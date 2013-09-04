@@ -13,11 +13,11 @@ class VodafoneGateTest(unittest.TestCase):
         self.assertIs(gate_factory.get_class('VODAFONE.IE'),
                       smsgates.contrib.VodafoneGate)
 
-#    def test_send_with_device(self):
-#        with smsgates.contrib.VodafoneGate(
-#            login=os.environ['TEST_SMS_GATES_LOGIN'],
-#            password=os.environ['TEST_SMS_GATES_PASSWORD']) as gate:
-#            gate.send("It worked!", os.environ['TEST_SMS_GATES_PHONE_NR'])
+    # def test_send_with_device(self):
+    #     with smsgates.contrib.VodafoneGate(
+    #         login=os.environ['TEST_SMS_GATES_LOGIN'],
+    #         password=os.environ['TEST_SMS_GATES_PASSWORD']) as gate:
+    #         gate.send("It worked!", os.environ['TEST_SMS_GATES_PHONE_NR'])
 
 
 class OrangeGateTest(unittest.TestCase):
@@ -30,11 +30,29 @@ class OrangeGateTest(unittest.TestCase):
         self.assertIs(gate_factory.get_class('ORANGE.PL'),
                       smsgates.contrib.OrangeGate)
 
-#    def test_send_with_device(self):
-#        with smsgates.Orange_Gate(
-#            login=os.environ['TEST_SMS_GATES_LOGIN'],
-#            password=os.environ['TEST_SMS_GATES_PASSWORD']) as gate:
-#            gate.send("It worked!", os.environ['TEST_SMS_GATES_PHONE_NR'])
+    # def test_send_with_device(self):
+    #     with smsgates.Orange_Gate(
+    #         login=os.environ['TEST_SMS_GATES_LOGIN'],
+    #         password=os.environ['TEST_SMS_GATES_PASSWORD']) as gate:
+    #         gate.send("It worked!", os.environ['TEST_SMS_GATES_PHONE_NR'])
+
+
+class PlayGateTest(unittest.TestCase):
+
+    def test_get_gate_class(self):
+        gate_factory = smsgates.contrib.GateFactory()
+        self.assertIs(gate_factory.get_class('play.pl'),
+                      smsgates.contrib.PlayGate)
+        self.assertIs(gate_factory.get_class('Play.Pl'),
+                      smsgates.contrib.PlayGate)
+        self.assertIs(gate_factory.get_class('PLAY.PL'),
+                      smsgates.contrib.PlayGate)
+
+    # def test_send_with_device(self):
+    #     with smsgates.contrib.PlayGate(
+    #         login=os.environ['TEST_SMS_GATES_LOGIN'],
+    #         password=os.environ['TEST_SMS_GATES_PASSWORD']) as gate:
+    #         gate.send("It worked!", os.environ['TEST_SMS_GATES_PHONE_NR'])
 
 
 if __name__ == '__main__':

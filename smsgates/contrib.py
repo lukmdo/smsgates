@@ -10,6 +10,7 @@ All SmsGates should implement three methods:
 @todo: Consider adding generic class SMSGate that would encapsulate GateFactory
 """
 
+import re
 import os
 import tempfile
 import twill.errors
@@ -24,6 +25,7 @@ class GateFactory(BaseFactory):
         return {
             'vodafone.ie': VodafoneGate,
             'orange.pl': OrangeGate,
+            'play.pl': PlayGate,
             'twilio.com': TwilioGate}
 
     @classmethod
@@ -67,7 +69,6 @@ class OrangeGate(AbstractSMSGate):
 
     def close(self, error_info=None):
         web.formvalue("logoutForm", "_dyncharset", None)
-        web.save_html()
         web.submit()
         web.code(200)
         web.find("zaloguj")
@@ -96,7 +97,6 @@ class VodafoneGate(AbstractSMSGate):
         web.formvalue("Login", "password", self.MY_PASSWORD)
         web.submit()
         web.code(200)
-        web.notfind("check your details")
         web.find(self.SERVICE_URL)
 
     def send(self, msg, *send_to):
@@ -132,6 +132,112 @@ class VodafoneGate(AbstractSMSGate):
         web.follow(self.LOGOUT_URL)
         web.code(200)
         web.find("Sign in to")
+
+
+class PlayGate(AbstractSMSGate):
+    """Tested with www.play.pl"""
+
+    def _retry_find(self, what, num_retries=2):
+        for n in range(num_retries):
+            """Fix for PlayGate stacking form submission redirects"""
+            try:
+                web.find(what)
+            except twill.errors.TwillAssertionError:
+                try:
+                    web.submit()
+                except:
+                    pass
+            else:
+                break
+
+    def _pl_numbers_only(self, send_to):
+        """
+        :return: PL number without prefix
+        :rtype: str
+        :raises: AssertionError when send_to has unrecognized prefix
+        """
+        to = getattr(send_to, "mobile", send_to)
+        if len(to) <= 9:
+            return to
+
+        prefix, number = to[:-9], to[-9:]
+        assert prefix in {"048", "+48", "48"}, \
+            "Only PL prefix allowed got: (%s) %s" % (prefix, number)
+        return number
+
+    def setup(self,
+              login=None,
+              password=None,
+              service_url="http://bramka.play.pl",
+              login_url="https://logowanie.play.pl/p4-idp2/LoginForm.do",
+              logout_url="https://logowanie.play.pl/p4-idp2/LogoutUser"):
+        self.SERVICE_URL = service_url
+        self.LOGIN_URL = login_url
+        self.LOGOUT_URL = logout_url
+        self.MY_PHONE_NUMBER = login
+        self.MY_PASSWORD = password
+
+        web.config('readonly_controls_writeable', True)
+        web.agent(self.MY_HTTP_AGENT)
+        web.go(self.LOGIN_URL)
+        web.code(200)
+        try:
+            web.find("loginForm")
+        except twill.errors.TwillAssertionError:
+            web.follow("kliknij")
+            web.code(200)
+            web.submit()
+            web.code(200)
+            web.find("random")
+            regexp = "input\[name=\"random\"\]'\).val\('([^']+)'\)"
+            found = re.search(regexp, web.get_browser().get_html())
+            assert found
+            rvalue = found.groups()[0]
+            web.formvalue("loginForm", "random", rvalue)
+
+        web.formvalue("loginForm", "login", self.MY_PHONE_NUMBER)
+        web.formvalue("loginForm", "password", self.MY_PASSWORD)
+        web.submit()
+        web.code(200)
+        self._retry_find(self.SERVICE_URL, 5)
+
+    def send(self, msg, *send_to):
+        web.follow(self.SERVICE_URL)
+        self._retry_find("editableSmsComposeForm", 5)
+
+        try:
+            page = web.get_browser().get_html()
+            web.notfind("inputCaptcha")
+        except twill.errors.TwillAssertionError, e:
+            found = re.search("(/composer/public/jcaptcha\?id=.*)", page)
+            assert found
+            web.go(found.groups()[0])
+            with tempfile.NamedTemporaryFile(suffix=".jpeg") as captcha:
+                web.save_html(captcha.name)
+                web.back()
+                os.system("open %s " % captcha.name)
+                web.formvalue("editableSmsComposeForm", "inputCaptcha",
+                              raw_input("Captcha: "))
+
+        send_to_str = " ".join(self._pl_numbers_only(n) for n in send_to)
+        web.formvalue("editableSmsComposeForm", "recipients", send_to_str)
+        web.formvalue("editableSmsComposeForm", "content_in", msg)
+        # exotic-and-required:
+        web.formvalue("editableSmsComposeForm", "sendform", "on")
+        web.formvalue("editableSmsComposeForm", "content_out", msg)
+        web.formvalue("editableSmsComposeForm", "old_content", msg)
+        web.submit()
+        web.code(200)
+
+        web.formvalue("editableSmsComposeForm", "SMS_SEND_CONFIRMED", "ok")
+        web.submit()
+        web.code(200)
+        info_msg = u'Wiadomo\u015b\u0107 zosta\u0142a wys\u0142ana'
+        web.find(info_msg.encode('utf8'))
+
+    def close(self, error_info=None):
+        web.go(self.LOGOUT_URL)
+        web.code(200)
 
 
 class TwilioGate(AbstractSMSGate):
