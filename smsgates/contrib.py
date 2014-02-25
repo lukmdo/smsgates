@@ -138,8 +138,8 @@ class PlayGate(AbstractSMSGate):
     """Tested with www.play.pl"""
 
     def _retry_find(self, what, num_retries=2):
+        """Fix for PlayGate stacking form submission redirects"""
         for n in range(num_retries):
-            """Fix for PlayGate stacking form submission redirects"""
             try:
                 web.find(what)
             except twill.errors.TwillAssertionError:
@@ -149,6 +149,7 @@ class PlayGate(AbstractSMSGate):
                     pass
             else:
                 break
+        web.find(what)
 
     def _pl_numbers_only(self, send_to):
         """
@@ -168,7 +169,7 @@ class PlayGate(AbstractSMSGate):
     def setup(self,
               login=None,
               password=None,
-              service_url="http://bramka.play.pl",
+              service_url="https://bramka.play.pl",
               login_url="https://logowanie.play.pl/p4-idp2/LoginForm.do",
               logout_url="https://logowanie.play.pl/p4-idp2/LogoutUser"):
         self.SERVICE_URL = service_url
@@ -179,30 +180,18 @@ class PlayGate(AbstractSMSGate):
 
         web.config('readonly_controls_writeable', True)
         web.agent(self.MY_HTTP_AGENT)
-        web.go(self.LOGIN_URL)
-        web.code(200)
-        try:
-            web.find("loginForm")
-        except twill.errors.TwillAssertionError:
-            web.follow("kliknij")
-            web.code(200)
-            web.submit()
-            web.code(200)
-            web.find("random")
-            regexp = "input\[name=\"random\"\]'\).val\('([^']+)'\)"
-            found = re.search(regexp, web.get_browser().get_html())
-            assert found
-            rvalue = found.groups()[0]
-            web.formvalue("loginForm", "random", rvalue)
 
+        web.go(self.SERVICE_URL)
+        web.submit()
+        web.code(200)
         web.formvalue("loginForm", "login", self.MY_PHONE_NUMBER)
         web.formvalue("loginForm", "password", self.MY_PASSWORD)
         web.submit()
         web.code(200)
-        self._retry_find(self.SERVICE_URL, 5)
+        self._retry_find("editableSmsComposeForm", 5)
 
     def send(self, msg, *send_to):
-        web.follow(self.SERVICE_URL)
+        web.go(self.SERVICE_URL)
         self._retry_find("editableSmsComposeForm", 5)
 
         try:
